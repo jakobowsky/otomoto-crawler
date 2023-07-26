@@ -1,6 +1,5 @@
-# otomoto-crawler
-A simple scraper for a car auction website Otomoto.pl <br>
-YouTube link: https://youtu.be/GSLxJZswoX0
+# joboard-crawler
+A simple scraper for a job website in Poland and Germany <br>
 
 ## Setup
 ```
