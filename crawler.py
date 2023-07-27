@@ -7,7 +7,7 @@ import json
 
 
 # Fetch HTML content from the URL
-url = "https://nofluffjobs.com/pl/praca-zdalna?page=1"
+url = "https://nofluffjobs.com/pl/praca-zdalna?page=1" #make the paggination for the number of pages 
 response = requests.get(url)
 html_page = response.content
 
@@ -44,7 +44,7 @@ output_json = json.dumps(job_data_list, ensure_ascii=False, indent=2)
 # Print the JSON data (or save it to a file)
 print(output_json)
 
-with open('output.csv', 'w', newline='', encoding='utf-8') as csvfile:
+with open('output.csv', 'w', newline='', encoding='utf-8') as csvfile: # CSV don't work with some symbols
     fieldnames = ['title', 'description', 'town', 'type_of_work', 'salary']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
