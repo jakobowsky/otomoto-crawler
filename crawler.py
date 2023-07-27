@@ -3,59 +3,54 @@ from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
 from typing import List
 import csv
+import json
 
-@dataclass
-class Vacancy:
-    link: str
-    company: str
-    descript: str
-    town: int
-    payment: int
 
-class GoworkScrapper: 
-    def __init__(self, praca_make: str) -> None:
-        self.headers = {
-             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.34",
-             "connection": "keep-alive",
-        }
-        self.praca_make = praca_make
-        self.website = "https://www.gowork.pl/praca"
+# Fetch HTML content from the URL
+url = "https://nofluffjobs.com/pl/praca-zdalna?page=1"
+response = requests.get(url)
+html_page = response.content
 
-def scrape_pages(self, number_of_pages: int) -> List[Vacancy]:
-   vacancies = []
-   for i in range(1, number_of_pages + 1):
-       current_page = f"{self.website}/{self.praca_make}/{i};pg"
-       new_vacancies = self.scrape_vacancies_from(current_page)
-       vacancies += new_vacancies
-   return vacancies
+# Parse the HTML content using BeautifulSoup
+soup = BeautifulSoup(html_page, 'html.parser')
 
-def scrape_vacancies_from(self, current_page) -> List[Vacancy]:
-    try: 
-        response = requests.get(current_page, headers=self.headers).text
-        soup = BeautifulSoup(response, "html.parser")
-        vacancies = []
-        for offer in soup.find_all('div', class_='job-listing__container container'):
-            vacancy = Vacancy(
-                link=offer.find('a', class_='job-listing__link').get('href'),
-                company=offer.find('span', class_='job-listing__company').text,
-                descript=offer.find('div', class_='job-listing__description').text,
-                town=int(offer.find('span', class_='job-listing__location').text.split(',')[0]),
-                payment=int(offer.find('span', class_='job-listing__salary').text.split('-')[0]),
-            )
-            vacancies.append(vacancy)
-        return vacancies
-    except Exception as e:
-        print(f"Problems with {current_page}, reasons: {e}")
-        return []
+# Initialize a list to store the parsed job data
+job_data_list = []
 
-def scrape_gowork() -> None:
-    praca_make = 'ua-friendly-offer;tag'
-    scraper = GoworkScrapper(praca_make)
-    vacancies = scraper.scrape_pages(3)
-    print(vacancies)
- 
+# Find all the job containers
+job_containers = soup.find_all('a', class_='posting-list-item')
 
-if __name__ == '__main__':
-    scrape_gowork()
+# Loop through each job container and extract the desired information
+for job_container in job_containers:
+    # Extract the data from the job container
+    title = job_container.find('h3', class_='posting-title__position').text.strip()
+    description = ''  # Add code to extract description if present in the HTML
+    town = job_container.find('span', class_='tw-text-ellipsis').text.strip()
+    type_of_work = job_container.find('span', class_='text-truncate').text.strip()
+    salary = job_container.find('span', class_='salary').text.strip()
 
+    # Append the extracted data to the job_data_list as a dictionary
+    job_data_list.append({
+        'title': title,
+        'description': description,
+        'town': town,
+        'type_of_work': type_of_work,
+        'salary': salary,
+    })
+
+# Convert the job_data_list to JSON format
+output_json = json.dumps(job_data_list, ensure_ascii=False, indent=2)
+
+# Print the JSON data (or save it to a file)
+print(output_json)
+
+with open('output.csv', 'w', newline='', encoding='utf-8') as csvfile:
+    fieldnames = ['title', 'description', 'town', 'type_of_work', 'salary']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for job_data in job_data_list:
+        writer.writerow(job_data)
+
+# Convert the job_data_list to JSON format and save to a file
+with open('jobs.json', 'w', encoding='utf-8') as json_file:
+    json.dump(job_data_list, json_file, ensure_ascii=False, indent=2)
